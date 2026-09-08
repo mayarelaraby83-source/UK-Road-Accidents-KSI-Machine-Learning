@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KSI — توقع خطورة حوادث الطرق</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
+
+  :root{
+    --asphalt-950:#15171a;
+    --asphalt-900:#1b1e22;
+    --asphalt-800:#24272c;
+    --asphalt-700:#33373d;
+    --line-lane:#4a4e55;
+    --paper:#eeeae1;
+    --paper-dim:#a9a49a;
+    --amber:#e2a53d;
+    --amber-dim:#8a6a30;
+    --safe:#4c8c6b;
+    --warn:#d68a3c;
+    --danger:#c1453c;
+    --radius:10px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--asphalt-950);
+    color:var(--paper);
+    font-family:'IBM Plex Sans Arabic','IBM Plex Sans',sans-serif;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  html[lang="en"] body{
+    font-family:'IBM Plex Sans','Archivo',sans-serif;
+  }
+
+  ::selection{background:var(--amber);color:var(--asphalt-950);}
+
+  a{color:var(--amber);}
+
+  .wrap{max-width:1040px;margin:0 auto;padding:0 22px;}
+
+  /* ---------- LANG TOGGLE ---------- */
+  .lang-toggle{
+    position:absolute;
+    top:22px; right:22px;
+    z-index:5;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.78rem;
+    padding:7px 14px;
+    border:1px solid var(--asphalt-700);
+    border-radius:999px;
+    background:var(--asphalt-900);
+    color:var(--amber);
+    cursor:pointer;
+    transition:border-color .12s ease, background .12s ease;
+  }
+  .lang-toggle:hover{border-color:var(--amber-dim); background:var(--asphalt-800);}
+
+  /* ---------- HERO ---------- */
+  header.hero{
+    position:relative;
+    padding:72px 0 56px;
+    border-bottom:1px solid var(--asphalt-700);
+    overflow:hidden;
+  }
+  header.hero::before{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      repeating-linear-gradient(90deg, transparent 0 38px, var(--line-lane) 38px 40px, transparent 40px 78px);
+    opacity:.35;
+    mask-image:linear-gradient(180deg, transparent, black 40%, black 60%, transparent);
+    top:auto; bottom:0; height:2px;
+  }
+  .hero h1{
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:clamp(2rem,5vw,3.1rem);
+    letter-spacing:-0.01em;
+    margin:0 0 14px;
+    color:var(--paper);
+    max-width:760px;
+  }
+  .hero p.lede{
+    max-width:640px;
+    font-size:1.08rem;
+    color:var(--paper-dim);
+    margin:0;
+  }
+  .hero .tagrow{
+    margin-top:26px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.78rem;
+    padding:6px 12px;
+    border:1px solid var(--asphalt-700);
+    border-radius:999px;
+    color:var(--paper-dim);
+  }
+  .tag b{color:var(--amber); font-weight:600;}
+
+  /* ---------- SECTION SHELL ---------- */
+  section{padding:56px 0;}
+  section + section{border-top:1px solid var(--asphalt-700);}
+  h2.sec-title{
+    font-family:'Archivo',sans-serif;
+    font-size:1.5rem;
+    font-weight:700;
+    margin:0 0 8px;
+    color:var(--paper);
+  }
+  p.sec-sub{color:var(--paper-dim); margin:0 0 36px; max-width:620px;}
+
+  /* ---------- ROUTE / PIPELINE ---------- */
+  .route{
+    position:relative;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:4px;
+    padding-top:6px;
+  }
+  .route::before{
+    content:"";
+    position:absolute;
+    top:19px; right:24px; left:24px;
+    height:3px;
+    background:var(--asphalt-700);
+    border-radius:2px;
+  }
+  .route::after{
+    content:"";
+    position:absolute;
+    top:19px; right:24px; left:24px;
+    height:3px;
+    background-image:repeating-linear-gradient(90deg, var(--amber) 0 14px, transparent 14px 26px);
+    opacity:.9;
+  }
+  .stop{
+    position:relative;
+    flex:1;
+    min-width:0;
+    text-align:center;
+    padding-top:44px;
+  }
+  .stop .marker{
+    position:absolute;
+    top:0; right:50%; transform:translateX(50%);
+    width:40px;height:40px;
+    border-radius:50%;
+    background:var(--asphalt-900);
+    border:2px solid var(--amber);
+    color:var(--amber);
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    display:flex;align-items:center;justify-content:center;
+    font-size:.95rem;
+  }
+  .stop h3{
+    font-size:.92rem;
+    font-weight:600;
+    color:var(--paper);
+    margin:0 0 6px;
+  }
+  .stop p{
+    font-size:.82rem;
+    color:var(--paper-dim);
+    margin:0;
+    padding:0 4px;
+  }
+  @media (max-width:760px){
+    .route{flex-direction:column; gap:26px;}
+    .route::before,.route::after{
+      top:24px; bottom:24px; right:19px; left:auto;
+      width:3px; height:auto;
+      background-image:repeating-linear-gradient(180deg, var(--amber) 0 14px, transparent 14px 26px);
+    }
+    .stop{padding-right:56px; padding-top:0; text-align:right;}
+    .stop .marker{right:auto; left:auto; top:0; transform:none;}
+    html[lang="en"] .route::before,html[lang="en"] .route::after{right:auto; left:19px;}
+    html[lang="en"] .stop{padding-right:0; padding-left:56px; text-align:left;}
+  }
+
+  /* ---------- NOTES GRID ---------- */
+  .notes-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:1px;
+    background:var(--asphalt-700);
+    border:1px solid var(--asphalt-700);
+    border-radius:var(--radius);
+    overflow:hidden;
+    margin-top:40px;
+  }
+  .note{
+    background:var(--asphalt-900);
+    padding:20px 22px;
+  }
+  .note h4{
+    margin:0 0 8px;
+    font-size:.85rem;
+    color:var(--amber);
+    font-weight:600;
+  }
+  .note p{margin:0; font-size:.88rem; color:var(--paper-dim);}
+
+  /* ---------- FORM ---------- */
+  .config-bar{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
+    background:var(--asphalt-900);
+    border:1px solid var(--asphalt-700);
+    border-radius:var(--radius);
+    padding:14px 18px;
+    margin-bottom:32px;
+  }
+  .config-bar label{font-size:.85rem; color:var(--paper-dim); white-space:nowrap;}
+  .config-bar input[type=text]{
+    flex:1; min-width:220px;
+  }
+  .config-bar .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--asphalt-700);
+    flex-shrink:0;
+  }
+  .config-bar .dot.ok{background:var(--safe);}
+  .config-bar .dot.bad{background:var(--danger);}
+  .config-bar small{color:var(--paper-dim); font-size:.78rem;}
+
+  details.cors{margin-bottom:32px;}
+  details.cors summary{
+    cursor:pointer; color:var(--amber); font-size:.88rem; font-weight:600;
+    padding:4px 0;
+  }
+  details.cors pre{
+    background:var(--asphalt-900);
+    border:1px solid var(--asphalt-700);
+    border-radius:var(--radius);
+    padding:16px 18px;
+    overflow-x:auto;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.8rem;
+    color:var(--paper);
+    margin-top:10px;
+    direction:ltr;
+    text-align:left;
+  }
+
+  .test-layout{
+    display:grid;
+    grid-template-columns:1.5fr 1fr;
+    gap:32px;
+    align-items:start;
+  }
+  @media (max-width:880px){ .test-layout{grid-template-columns:1fr;} }
+
+  fieldset{
+    border:1px solid var(--asphalt-700);
+    border-radius:var(--radius);
+    padding:18px 20px 22px;
+    margin:0 0 18px;
+  }
+  legend{
+    font-family:'Archivo',sans-serif;
+    font-weight:600;
+    font-size:.92rem;
+    color:var(--amber);
+    padding:0 8px;
+  }
+  .field-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:14px;
+  }
+  .field{display:flex; flex-direction:column; gap:5px;}
+  .field label{font-size:.76rem; color:var(--paper-dim);}
+  .field label .code{color:var(--amber-dim); font-family:'IBM Plex Mono',monospace;}
+  input,select{
+    background:var(--asphalt-800);
+    border:1px solid var(--asphalt-700);
+    color:var(--paper);
+    border-radius:6px;
+    padding:8px 10px;
+    font-size:.86rem;
+    font-family:inherit;
+  }
+  input:focus,select:focus,input[type=text]:focus{
+    outline:2px solid var(--amber);
+    outline-offset:1px;
+  }
+
+  button.predict-btn{
+    width:100%;
+    background:var(--amber);
+    color:var(--asphalt-950);
+    border:none;
+    border-radius:8px;
+    padding:14px 20px;
+    font-family:'Archivo',sans-serif;
+    font-weight:700;
+    font-size:1rem;
+    cursor:pointer;
+    transition:transform .12s ease, background .12s ease;
+  }
+  button.predict-btn:hover{background:#eab454;}
+  button.predict-btn:active{transform:scale(.98);}
+  button.predict-btn:disabled{background:var(--asphalt-700); color:var(--paper-dim); cursor:wait;}
+
+  /* ---------- RESULT PANEL ---------- */
+  .result-panel{
+    position:sticky;
+    top:20px;
+    background:var(--asphalt-900);
+    border:1px solid var(--asphalt-700);
+    border-radius:var(--radius);
+    padding:26px 24px 22px;
+  }
+  .result-panel h3{
+    font-family:'Archivo',sans-serif;
+    font-size:1rem;
+    margin:0 0 20px;
+    color:var(--paper);
+  }
+  .gauge-wrap{position:relative; width:100%; max-width:260px; margin:0 auto;}
+  .gauge-label{
+    position:absolute; left:0; right:0; bottom:8px;
+    text-align:center;
+  }
+  .gauge-label .pct{
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:2.1rem;
+    display:block;
+  }
+  .gauge-label .risk{
+    font-size:.8rem;
+    letter-spacing:.02em;
+    color:var(--paper-dim);
+  }
+  .verdict{
+    margin-top:18px;
+    padding:14px 16px;
+    border-radius:8px;
+    font-size:.9rem;
+    background:var(--asphalt-800);
+    border:1px solid var(--asphalt-700);
+  }
+  .verdict.high{border-color:var(--danger); color:#f0a29c;}
+  .verdict.medium{border-color:var(--warn); color:#f0c390;}
+  .verdict.low{border-color:var(--safe); color:#a9d6bd;}
+  .meta-row{
+    display:flex; justify-content:space-between;
+    font-size:.78rem; color:var(--paper-dim);
+    margin-top:14px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .empty-state{
+    text-align:center; color:var(--paper-dim); font-size:.88rem;
+    padding:30px 10px;
+  }
+  .err-box{
+    margin-top:14px; padding:12px 14px; border-radius:8px;
+    background:rgba(193,69,60,.12); border:1px solid var(--danger);
+    color:#f0a29c; font-size:.82rem; direction:ltr; text-align:left;
+    font-family:'IBM Plex Mono',monospace; white-space:pre-wrap;
+  }
+
+  footer{
+    padding:34px 0 60px;
+    color:var(--paper-dim);
+    font-size:.8rem;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <button type="button" class="lang-toggle" id="langToggle">English</button>
+  <div class="wrap">
+    <h1 data-ar="هل الحادثة دي هتبقى خطيرة؟" data-en="Will this accident be severe?">هل الحادثة دي هتبقى خطيرة؟</h1>
+    <p class="lede" data-ar="واجهة تجريبية لموديل التنبؤ بخطورة حوادث الطرق (Killed or Seriously Injured — KSI) المبني على بيانات STATS19 الرسمية لهيئة الطرق في المملكة المتحدة لسنة 2018. تحت تلاقي ملخص للمشروع، وتحت كده فورم تقدر تدخل بيانات حادثة وتشوف تنبؤ الموديل مباشرة." data-en="A demo interface for a road-accident severity prediction model (Killed or Seriously Injured — KSI), built on the UK's official STATS19 data for 2018. Below is a project summary, followed by a form where you can enter accident details and see the model's prediction live.">
+      واجهة تجريبية لموديل التنبؤ بخطورة حوادث الطرق (Killed or Seriously Injured — KSI)
+      المبني على بيانات STATS19 الرسمية لهيئة الطرق في المملكة المتحدة لسنة 2018.
+      تحت تلاقي ملخص للمشروع، وتحت كده فورم تقدر تدخل بيانات حادثة وتشوف تنبؤ الموديل مباشرة.
+    </p>
+    <div class="tagrow">
+      <span class="tag">Dataset: <b>STATS19 · 2018</b></span>
+      <span class="tag">Target: <b>is_KSI</b></span>
+      <span class="tag">Final model: <b>XGBoost</b></span>
+      <span class="tag">Decision threshold: <b>0.432</b></span>
+    </div>
+  </div>
+</header>
+
+<section id="project">
+  <div class="wrap">
+    <h2 class="sec-title" data-ar="إزاي اتعمل المشروع" data-en="How the project was built">إزاي اتعمل المشروع</h2>
+    <p class="sec-sub" data-ar="المسار من البيانات الخام لحد الموديل النهائي، خطوة بخطوة — زي رحلة على الطريق." data-en="The path from raw data to the final model, step by step — like a journey down the road.">
+      المسار من البيانات الخام لحد الموديل النهائي، خطوة بخطوة — زي رحلة على الطريق.
+    </p>
+
+    <div class="route">
+      <div class="stop">
+        <div class="marker">1</div>
+        <h3 data-ar="الدمج" data-en="Merging">الدمج</h3>
+        <p data-ar="Accidents (122,635 صف) + Vehicles (226,409) اتجمعوا على مستوى الحادثة. Casualties استبعد بالكامل عشان Data Leakage." data-en="Accidents (122,635 rows) + Vehicles (226,409) were merged at the accident level. Casualties was excluded entirely to avoid data leakage.">Accidents (122,635 صف) + Vehicles (226,409) اتجمعوا على مستوى الحادثة. Casualties استبعد بالكامل عشان Data Leakage.</p>
+      </div>
+      <div class="stop">
+        <div class="marker">2</div>
+        <h3 data-ar="التنظيف" data-en="Cleaning">التنظيف</h3>
+        <p data-ar="توحيد Accident_Index، إسقاط أعمدة عالية التنوع، وتحويل قيم شاذة (max_engine_cc > 10000، عمر سائق < 15) لـ Missing." data-en="Standardized Accident_Index, dropped high-cardinality columns, and converted outlier values (max_engine_cc > 10000, driver age < 15) to Missing.">توحيد Accident_Index، إسقاط أعمدة عالية التنوع، وتحويل قيم شاذة (max_engine_cc > 10000، عمر سائق < 15) لـ Missing.</p>
+      </div>
+      <div class="stop">
+        <div class="marker">3</div>
+        <h3 data-ar="هندسة الخصائص" data-en="Feature engineering">هندسة الخصائص</h3>
+        <p data-ar="استخراج Hour / Month / Is_Weekend، وإضافة أعلام &quot;غياب البيانات&quot; (missing flags) لأن الغياب نفسه بيرتبط بالخطورة." data-en="Extracted Hour / Month / Is_Weekend, and added missing-value flags, since missingness itself correlates with severity.">استخراج Hour / Month / Is_Weekend، وإضافة أعلام "غياب البيانات" (missing flags) لأن الغياب نفسه بيرتبط بالخطورة.</p>
+      </div>
+      <div class="stop">
+        <div class="marker">4</div>
+        <h3 data-ar="المعالجة" data-en="Preprocessing">المعالجة</h3>
+        <p data-ar="IterativeImputer (Decision Tree) للأعمدة الناقصة، Target Encoding لـ Local_Authority_(Highway)، وScaling منفصل للموديلات المسافاتية." data-en="IterativeImputer (Decision Tree) for missing columns, Target Encoding for Local_Authority_(Highway), and separate scaling for distance-based models.">IterativeImputer (Decision Tree) للأعمدة الناقصة، Target Encoding لـ Local_Authority_(Highway)، وScaling منفصل للموديلات المسافاتية.</p>
+      </div>
+      <div class="stop">
+        <div class="marker">5</div>
+        <h3 data-ar="مقارنة الموديلات" data-en="Model comparison">مقارنة الموديلات</h3>
+        <p data-ar="Logistic Regression، Decision Tree، Random Forest، XGBoost، LightGBM — بمقارنة Cross-validation." data-en="Logistic Regression, Decision Tree, Random Forest, XGBoost, LightGBM — compared via cross-validation.">Logistic Regression، Decision Tree، Random Forest، XGBoost، LightGBM — بمقارنة Cross-validation.</p>
+      </div>
+      <div class="stop">
+        <div class="marker">6</div>
+        <h3 data-ar="الموديل النهائي" data-en="Final model">الموديل النهائي</h3>
+        <p data-ar="XGBoost (ROC-AUC 0.686). حد القرار اتنقل من 0.5 لـ 0.432 عشان نرفع الـ Recall لحوالي 75% — تفويت حادثة خطيرة أغلى من إنذار كاذب." data-en="XGBoost (ROC-AUC 0.686). The decision threshold was moved from 0.5 to 0.432 to raise recall to about 75% — missing a severe accident costs more than a false alarm.">XGBoost (ROC-AUC 0.686). حد القرار اتنقل من 0.5 لـ 0.432 عشان نرفع الـ Recall لحوالي 75% — تفويت حادثة خطيرة أغلى من إنذار كاذب.</p>
+      </div>
+    </div>
+
+    <div class="notes-grid">
+      <div class="note">
+        <h4 data-ar="ليه Random Forest اتستبعد رغم إن دقته أعلى؟" data-en="Why was Random Forest dropped despite higher accuracy?">ليه Random Forest اتستبعد رغم إن دقته أعلى؟</h4>
+        <p data-ar="دقة 0.72 لكن Recall منخفض (0.41) وفجوة Train-Test F1 كبيرة (0.32) — يعني Overfitting وميل للأغلبية، وده مش مقبول في سياق سلامة الطرق." data-en="Accuracy of 0.72 but low recall (0.41) and a large train-test F1 gap (0.32) — meaning overfitting and a bias toward the majority class, which isn't acceptable in a road-safety context.">دقة 0.72 لكن Recall منخفض (0.41) وفجوة Train-Test F1 كبيرة (0.32) — يعني Overfitting وميل للأغلبية، وده مش مقبول في سياق سلامة الطرق.</p>
+      </div>
+      <div class="note">
+        <h4 data-ar="Data leakage اتشال منين؟" data-en="Where was the data leakage removed from?">Data leakage اتشال منين؟</h4>
+        <p data-ar="Did_Police_Officer_Attend_Scene_of_Accident كان أهم Feature — لكنه بيتحدد بناءً على تقييم أولي للخطورة، يعني بيسرب معلومة عن الـ Target. اتشال مع Junction_Control و 2nd_Road_Class (تأثير ضعيف)." data-en="Did_Police_Officer_Attend_Scene_of_Accident was the most important feature — but it's decided based on an initial severity assessment, meaning it leaks information about the target. It was removed along with Junction_Control and 2nd_Road_Class (weak effect).">Did_Police_Officer_Attend_Scene_of_Accident كان أهم Feature — لكنه بيتحدد بناءً على تقييم أولي للخطورة، يعني بيسرب معلومة عن الـ Target. اتشال مع Junction_Control و 2nd_Road_Class (تأثير ضعيف).</p>
+      </div>
+      <div class="note">
+        <h4 data-ar="ليه الـ AUC مش عالي جدًا؟" data-en="Why isn't the AUC very high?">ليه الـ AUC مش عالي جدًا؟</h4>
+        <p data-ar="الارتباطات الخطية بين الـ Features وis_KSI كلها ضعيفة (أعلاها 0.07–0.08)، يعني الخطورة بتعتمد على أنماط غير خطية ومركّبة (وقت، طريق، إضاءة) مش علاقات بسيطة." data-en="Linear correlations between the features and is_KSI are all weak (highest 0.07–0.08), meaning severity depends on non-linear, compound patterns (time, road, lighting) rather than simple relationships.">الارتباطات الخطية بين الـ Features وis_KSI كلها ضعيفة (أعلاها 0.07–0.08)، يعني الخطورة بتعتمد على أنماط غير خطية ومركّبة (وقت، طريق، إضاءة) مش علاقات بسيطة.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="try">
+  <div class="wrap">
+    <h2 class="sec-title" data-ar="جرّب الموديل" data-en="Try the model">جرّب الموديل</h2>
+    <p class="sec-sub" data-ar="الفورم ده بيبعت البيانات لسيرفر الـ FastAPI (main.py) بتاعك على جهازك، ويرجعلك التنبؤ والاحتمالية." data-en="This form sends data to your FastAPI server (main.py) on your own machine, and returns the prediction and probability.">
+      الفورم ده بيبعت البيانات لسيرفر الـ FastAPI (main.py) بتاعك على جهازك، ويرجعلك التنبؤ والاحتمالية.
+    </p>
+
+    <div class="config-bar">
+      <span class="dot" id="statusDot"></span>
+      <label for="apiBase" data-ar="عنوان السيرفر:" data-en="Server address:">عنوان السيرفر:</label>
+      <input type="text" id="apiBase" value="http://127.0.0.1:8000" />
+      <small id="statusText" data-ar="لسه ما اتفحصش" data-en="Not checked yet">لسه ما اتفحصش</small>
+    </div>
+
+    <details class="cors">
+      <summary data-ar="السيرفر رافض الطلب من هنا؟ (مشكلة CORS)" data-en="Server rejecting requests from here? (CORS issue)">السيرفر رافض الطلب من هنا؟ (مشكلة CORS)</summary>
+      <pre>from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)</pre>
+      <p style="color:var(--paper-dim); font-size:.82rem; margin-top:10px;">
+        <span data-ar="ضيف السطور دي في main.py بعد إنشاء app، وشغّل السيرفر بـ" data-en="Add these lines to main.py after creating app, then run the server with">ضيف السطور دي في main.py بعد إنشاء app، وشغّل السيرفر بـ</span>
+        <code style="color:var(--amber);">uvicorn main:app --reload</code>
+        <span data-ar="وسيب الصفحة دي مفتوحة في المتصفح جنب السيرفر." data-en="and leave this page open in the browser alongside the server.">وسيب الصفحة دي مفتوحة في المتصفح جنب السيرفر.</span>
+      </p>
+    </details>
+
+    <div class="test-layout">
+      <form id="predictForm">
+
+        <fieldset>
+          <legend data-ar="التوقيت والموقع" data-en="Timing & location">التوقيت والموقع</legend>
+          <div class="field-grid">
+            <div class="field"><label><span data-ar="التاريخ" data-en="Date">التاريخ</span> <span class="code">DD/MM/YYYY</span></label><input type="text" name="Date" value="15/06/2018"></div>
+            <div class="field"><label><span data-ar="الوقت" data-en="Time">الوقت</span> <span class="code">HH:MM</span></label><input type="text" name="Time" value="17:30"></div>
+            <div class="field">
+              <label><span data-ar="يوم الأسبوع" data-en="Day of week">يوم الأسبوع</span> <span class="code">Day_of_Week</span></label>
+              <select name="Day_of_Week">
+                <option value="1" data-ar="1 — الأحد" data-en="1 — Sunday">1 — الأحد</option>
+                <option value="2" data-ar="2 — الاتنين" data-en="2 — Monday">2 — الاتنين</option>
+                <option value="3" data-ar="3 — التلات" data-en="3 — Tuesday">3 — التلات</option>
+                <option value="4" data-ar="4 — الأربع" data-en="4 — Wednesday">4 — الأربع</option>
+                <option value="5" data-ar="5 — الخميس" data-en="5 — Thursday">5 — الخميس</option>
+                <option value="6" selected data-ar="6 — الجمعة" data-en="6 — Friday">6 — الجمعة</option>
+                <option value="7" data-ar="7 — السبت" data-en="7 — Saturday">7 — السبت</option>
+              </select>
+            </div>
+            <div class="field"><label>Longitude</label><input type="number" step="any" name="Longitude" value="-0.1278"></div>
+            <div class="field"><label>Latitude</label><input type="number" step="any" name="Latitude" value="51.5074"></div>
+            <div class="field"><label>Easting (OSGR)</label><input type="number" step="any" name="Location_Easting_OSGR" value="530000"></div>
+            <div class="field"><label>Northing (OSGR)</label><input type="number" step="any" name="Location_Northing_OSGR" value="180000"></div>
+            <div class="field"><label><span data-ar="كود قوة الشرطة" data-en="Police force code">كود قوة الشرطة</span> <span class="code">Police_Force</span></label><input type="number" name="Police_Force" value="1"></div>
+            <div class="field">
+              <label data-ar="منطقة حضرية / ريفية" data-en="Urban / rural area">منطقة حضرية / ريفية</label>
+              <select name="Urban_or_Rural_Area">
+                <option value="1" selected data-ar="1 — حضرية (Urban)" data-en="1 — Urban">1 — حضرية (Urban)</option>
+                <option value="2" data-ar="2 — ريفية (Rural)" data-en="2 — Rural">2 — ريفية (Rural)</option>
+              </select>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend data-ar="الطريق" data-en="Road">الطريق</legend>
+          <div class="field-grid">
+            <div class="field"><label data-ar="الجهة المحلية (District)" data-en="Local authority (District)">الجهة المحلية (District)</label><input type="number" name="Local_Authority_(District)" value="1"></div>
+            <div class="field"><label data-ar="الجهة المحلية (Highway code)" data-en="Local authority (Highway code)">الجهة المحلية (Highway code)</label><input type="text" name="Local_Authority_(Highway)" value="E09000033"></div>
+            <div class="field">
+              <label><span data-ar="فئة الطريق الأول" data-en="1st road class">فئة الطريق الأول</span> <span class="code">1st_Road_Class</span></label>
+              <select name="1st_Road_Class">
+                <option value="1">1 — Motorway</option>
+                <option value="2">2 — A(M)</option>
+                <option value="3" selected>3 — A road</option>
+                <option value="4">4 — B road</option>
+                <option value="5">5 — C road</option>
+                <option value="6" data-ar="6 — غير مصنّف" data-en="6 — Unclassified">6 — غير مصنّف</option>
+              </select>
+            </div>
+            <div class="field"><label data-ar="رقم الطريق الأول" data-en="1st road number">رقم الطريق الأول</label><input type="number" name="1st_Road_Number" value="100"></div>
+            <div class="field">
+              <label><span data-ar="فئة الطريق الثاني" data-en="2nd road class">فئة الطريق الثاني</span> <span class="code">2nd_Road_Class</span></label>
+              <select name="2nd_Road_Class">
+                <option value="-1" data-ar="-1 — لا ينطبق" data-en="-1 — Not applicable">-1 — لا ينطبق</option>
+                <option value="1">1 — Motorway</option>
+                <option value="2">2 — A(M)</option>
+                <option value="3">3 — A road</option>
+                <option value="4">4 — B road</option>
+                <option value="5">5 — C road</option>
+                <option value="6" selected data-ar="6 — غير مصنّف" data-en="6 — Unclassified">6 — غير مصنّف</option>
+              </select>
+            </div>
+            <div class="field"><label data-ar="رقم الطريق الثاني" data-en="2nd road number">رقم الطريق الثاني</label><input type="number" name="2nd_Road_Number" value="0"></div>
+            <div class="field">
+              <label><span data-ar="نوع الطريق" data-en="Road type">نوع الطريق</span> <span class="code">Road_Type</span></label>
+              <select name="Road_Type">
+                <option value="1">1 — Roundabout</option>
+                <option value="2">2 — One way street</option>
+                <option value="3">3 — Dual carriageway</option>
+                <option value="6" selected>6 — Single carriageway</option>
+                <option value="7">7 — Slip road</option>
+                <option value="9" data-ar="9 — غير معروف" data-en="9 — Unknown">9 — غير معروف</option>
+              </select>
+            </div>
+            <div class="field"><label data-ar="الحد الأقصى للسرعة (mph)" data-en="Speed limit (mph)">الحد الأقصى للسرعة (mph)</label><input type="number" name="Speed_limit" value="30"></div>
+            <div class="field"><label><span data-ar="تفاصيل التقاطع" data-en="Junction detail">تفاصيل التقاطع</span> <span class="code">Junction_Detail</span></label><input type="number" name="Junction_Detail" value="3"></div>
+            <div class="field"><label><span data-ar="التحكم في التقاطع" data-en="Junction control">التحكم في التقاطع</span> <span class="code">Junction_Control</span></label><input type="number" name="Junction_Control" value="4"></div>
+            <div class="field"><label data-ar="تحكم بشري في المعبر" data-en="Pedestrian crossing — human control">تحكم بشري في المعبر</label><input type="number" name="Pedestrian_Crossing-Human_Control" value="0"></div>
+            <div class="field"><label data-ar="تجهيزات المعبر" data-en="Pedestrian crossing — physical facilities">تجهيزات المعبر</label><input type="number" name="Pedestrian_Crossing-Physical_Facilities" value="0"></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend data-ar="ظروف الحادثة" data-en="Accident conditions">ظروف الحادثة</legend>
+          <div class="field-grid">
+            <div class="field">
+              <label><span data-ar="الإضاءة" data-en="Light conditions">الإضاءة</span> <span class="code">Light_Conditions</span></label>
+              <select name="Light_Conditions">
+                <option value="1" selected data-ar="1 — نهار" data-en="1 — Daylight">1 — نهار</option>
+                <option value="4" data-ar="4 — ليل، إنارة شغالة" data-en="4 — Darkness, lights lit">4 — ليل، إنارة شغالة</option>
+                <option value="5" data-ar="5 — ليل، إنارة مطفية" data-en="5 — Darkness, lights unlit">5 — ليل، إنارة مطفية</option>
+                <option value="6" data-ar="6 — ليل، بدون إنارة" data-en="6 — Darkness, no lighting">6 — ليل، بدون إنارة</option>
+                <option value="7" data-ar="7 — ليل، إنارة غير معروفة" data-en="7 — Darkness, lighting unknown">7 — ليل، إنارة غير معروفة</option>
+              </select>
+            </div>
+            <div class="field">
+              <label><span data-ar="الطقس" data-en="Weather conditions">الطقس</span> <span class="code">Weather_Conditions</span></label>
+              <select name="Weather_Conditions">
+                <option value="1" selected data-ar="1 — صحو، بدون رياح شديدة" data-en="1 — Fine, no high winds">1 — صحو، بدون رياح شديدة</option>
+                <option value="2" data-ar="2 — مطر، بدون رياح شديدة" data-en="2 — Raining, no high winds">2 — مطر، بدون رياح شديدة</option>
+                <option value="3" data-ar="3 — ثلج، بدون رياح شديدة" data-en="3 — Snowing, no high winds">3 — ثلج، بدون رياح شديدة</option>
+                <option value="4" data-ar="4 — صحو، رياح شديدة" data-en="4 — Fine, high winds">4 — صحو، رياح شديدة</option>
+                <option value="5" data-ar="5 — مطر، رياح شديدة" data-en="5 — Raining, high winds">5 — مطر، رياح شديدة</option>
+                <option value="7" data-ar="7 — ضباب / رؤية ضعيفة" data-en="7 — Fog / poor visibility">7 — ضباب / رؤية ضعيفة</option>
+                <option value="8" data-ar="8 — أخرى" data-en="8 — Other">8 — أخرى</option>
+                <option value="9" data-ar="9 — غير معروف" data-en="9 — Unknown">9 — غير معروف</option>
+              </select>
+            </div>
+            <div class="field">
+              <label data-ar="حالة سطح الطريق" data-en="Road surface conditions">حالة سطح الطريق</label>
+              <select name="Road_Surface_Conditions">
+                <option value="1" selected data-ar="1 — جاف" data-en="1 — Dry">1 — جاف</option>
+                <option value="2" data-ar="2 — مبلل / رطب" data-en="2 — Wet / damp">2 — مبلل / رطب</option>
+                <option value="3" data-ar="3 — ثلج" data-en="3 — Snow">3 — ثلج</option>
+                <option value="4" data-ar="4 — جليد" data-en="4 — Frost / ice">4 — جليد</option>
+                <option value="5" data-ar="5 — فيضان" data-en="5 — Flood">5 — فيضان</option>
+              </select>
+            </div>
+            <div class="field"><label data-ar="ظروف خاصة بالموقع" data-en="Special conditions at site">ظروف خاصة بالموقع</label><input type="number" name="Special_Conditions_at_Site" value="0"></div>
+            <div class="field"><label><span data-ar="عوائق على الطريق" data-en="Carriageway hazards">عوائق على الطريق</span> <span class="code">Carriageway_Hazards</span></label><input type="number" name="Carriageway_Hazards" value="0"></div>
+            <div class="field">
+              <label data-ar="حضور شرطي المكان" data-en="Police officer attended scene">حضور شرطي المكان</label>
+              <select name="Did_Police_Officer_Attend_Scene_of_Accident">
+                <option value="1" selected data-ar="1 — حضر" data-en="1 — Attended">1 — حضر</option>
+                <option value="2" data-ar="2 — لم يحضر" data-en="2 — Did not attend">2 — لم يحضر</option>
+                <option value="3" data-ar="3 — غير معروف" data-en="3 — Unknown">3 — غير معروف</option>
+              </select>
+            </div>
+            <div class="field"><label><span data-ar="عدد المصابين" data-en="Number of casualties">عدد المصابين</span> <span class="code">Number_of_Casualties</span></label><input type="number" name="Number_of_Casualties" value="1"></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend data-ar="المركبات والسائقين (مُجمّعة على مستوى الحادثة)" data-en="Vehicles & drivers (aggregated at accident level)">المركبات والسائقين (مُجمّعة على مستوى الحادثة)</legend>
+          <div class="field-grid">
+            <div class="field"><label><span data-ar="عدد المركبات" data-en="Vehicle count">عدد المركبات</span> <span class="code">veh_count</span></label><input type="number" name="veh_count" value="2"></div>
+            <div class="field"><label data-ar="متوسط عمر السائقين" data-en="Average driver age">متوسط عمر السائقين</label><input type="number" step="any" name="avg_driver_age" value="35"></div>
+            <div class="field"><label data-ar="عدد السائقين الذكور" data-en="Number of male drivers">عدد السائقين الذكور</label><input type="number" name="n_male_drivers" value="1"></div>
+            <div class="field"><label data-ar="أقصى سعة محرك (cc)" data-en="Max engine capacity (cc)">أقصى سعة محرك (cc)</label><input type="number" step="any" name="max_engine_cc" value="1600"></div>
+            <div class="field"><label data-ar="متوسط عمر المركبات" data-en="Average vehicle age">متوسط عمر المركبات</label><input type="number" step="any" name="avg_vehicle_age" value="6"></div>
+          </div>
+        </fieldset>
+
+        <button type="submit" class="predict-btn" id="submitBtn" data-ar="توقّع الخطورة" data-en="Predict severity">توقّع الخطورة</button>
+      </form>
+
+      <div class="result-panel">
+        <h3 data-ar="نتيجة التنبؤ" data-en="Prediction result">نتيجة التنبؤ</h3>
+        <div id="resultBody">
+          <div class="empty-state" data-ar='دوس "توقّع الخطورة" عشان تشوف نتيجة الموديل هنا.' data-en='Click "Predict severity" to see the model&#39;s result here.'>
+            دوس "توقّع الخطورة" عشان تشوف نتيجة الموديل هنا.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer data-ar="واجهة تجريبية محلية — البيانات بتتبعت لسيرفر الـ FastAPI عندك بس، ومفيش أي حفظ أو تخزين خارجي." data-en="A local demo interface — data is sent only to your own FastAPI server, with no external saving or storage.">واجهة تجريبية محلية — البيانات بتتبعت لسيرفر الـ FastAPI عندك بس، ومفيش أي حفظ أو تخزين خارجي.</footer>
+
+<script>
+const apiBaseInput = document.getElementById('apiBase');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+const form = document.getElementById('predictForm');
+const submitBtn = document.getElementById('submitBtn');
+const resultBody = document.getElementById('resultBody');
+const langToggle = document.getElementById('langToggle');
+
+let currentLang = 'ar';
+let serverState = { kind: 'unchecked' }; // unchecked | {kind:'ok', model} | {kind:'error', status} | {kind:'unreachable'}
+let lastResult = null; // { probability, riskLevel, threshold, prediction } | 'server-error' string | null
+let lastErrorText = null;
+
+const TXT = {
+  ar: {
+    title: 'KSI — توقع خطورة حوادث الطرق',
+    toggleLabel: 'English',
+    predict: 'توقّع الخطورة',
+    predicting: 'بيتوقع...',
+    serverOk: model => 'السيرفر شغّال — موديل: ' + (model || '؟'),
+    serverErr: status => 'السيرفر رد بخطأ (' + status + ')',
+    serverUnreachable: 'مش قادر أوصل للسيرفر على العنوان ده',
+    unchecked: 'لسه ما اتفحصش',
+    emptyState: 'دوس "توقّع الخطورة" عشان تشوف نتيجة الموديل هنا.',
+    fetchFail: err => 'مش قادر أوصل للسيرفر.\nاتأكد إن main.py شغّال على العنوان ده، وإن الـ CORS مفعّل.\n\n' + err,
+    gaugeCaption: 'احتمال حادثة خطيرة (KSI)',
+    verdictHigh: '⚠ متوقّع: حادثة خطيرة (KSI)',
+    verdictLow: '✓ متوقّع: حادثة بسيطة',
+    riskHigh: 'خطورة عالية',
+    riskMedium: 'خطورة متوسطة',
+    riskLow: 'خطورة منخفضة',
+  },
+  en: {
+    title: 'KSI — Road Accident Severity Prediction',
+    toggleLabel: 'العربية',
+    predict: 'Predict severity',
+    predicting: 'Predicting...',
+    serverOk: model => 'Server running — model: ' + (model || '?'),
+    serverErr: status => 'Server responded with an error (' + status + ')',
+    serverUnreachable: "Can't reach the server at this address",
+    unchecked: 'Not checked yet',
+    emptyState: 'Click "Predict severity" to see the model\'s result here.',
+    fetchFail: err => "Can't reach the server.\nMake sure main.py is running at this address and CORS is enabled.\n\n" + err,
+    gaugeCaption: 'Probability of a severe accident (KSI)',
+    verdictHigh: '⚠ Predicted: severe accident (KSI)',
+    verdictLow: '✓ Predicted: minor accident',
+    riskHigh: 'High severity',
+    riskMedium: 'Medium severity',
+    riskLow: 'Low severity',
+  }
+};
+
+function updateStatusText(){
+  const t = TXT[currentLang];
+  if(serverState.kind === 'ok'){
+    statusText.textContent = t.serverOk(serverState.model);
+  } else if(serverState.kind === 'error'){
+    statusText.textContent = t.serverErr(serverState.status);
+  } else if(serverState.kind === 'unreachable'){
+    statusText.textContent = t.serverUnreachable;
+  } else {
+    statusText.textContent = t.unchecked;
+  }
+}
+
+async function checkServer(){
+  const base = apiBaseInput.value.replace(/\/$/,'');
+  try{
+    const res = await fetch(base + '/', { method:'GET' });
+    if(res.ok){
+      const data = await res.json();
+      statusDot.className = 'dot ok';
+      serverState = { kind:'ok', model: data.model };
+    } else {
+      statusDot.className = 'dot bad';
+      serverState = { kind:'error', status: res.status };
+    }
+  } catch(e){
+    statusDot.className = 'dot bad';
+    serverState = { kind:'unreachable' };
+  }
+  updateStatusText();
+}
+apiBaseInput.addEventListener('change', checkServer);
+checkServer();
+
+function numOrNull(v){
+  if(v === '' || v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isNaN(n) ? null : n;
+}
+
+const INT_FIELDS = new Set([
+  'Police_Force','Number_of_Casualties','Day_of_Week','Local_Authority_(District)',
+  '1st_Road_Class','1st_Road_Number','Road_Type','Speed_limit','Junction_Detail',
+  'Junction_Control','2nd_Road_Class','2nd_Road_Number',
+  'Pedestrian_Crossing-Human_Control','Pedestrian_Crossing-Physical_Facilities',
+  'Light_Conditions','Weather_Conditions','Road_Surface_Conditions',
+  'Special_Conditions_at_Site','Carriageway_Hazards','Urban_or_Rural_Area',
+  'Did_Police_Officer_Attend_Scene_of_Accident','veh_count','n_male_drivers'
+]);
+const FLOAT_FIELDS = new Set([
+  'Location_Easting_OSGR','Location_Northing_OSGR','Longitude','Latitude',
+  'avg_driver_age','max_engine_cc','avg_vehicle_age'
+]);
+const STRING_FIELDS = new Set(['Date','Time','Local_Authority_(Highway)']);
+
+function buildPayload(fd){
+  const payload = {};
+  for(const [key,val] of fd.entries()){
+    if(STRING_FIELDS.has(key)){
+      payload[key] = val;
+    } else if(INT_FIELDS.has(key)){
+      payload[key] = parseInt(val,10);
+    } else if(FLOAT_FIELDS.has(key)){
+      payload[key] = numOrNull(val);
+    } else {
+      payload[key] = val;
+    }
+  }
+  return payload;
+}
+
+function riskClass(level){
+  if(level === 'High') return 'high';
+  if(level === 'Medium') return 'medium';
+  return 'low';
+}
+function riskLabel(level, lang){
+  const t = TXT[lang];
+  if(level === 'High') return t.riskHigh;
+  if(level === 'Medium') return t.riskMedium;
+  return t.riskLow;
+}
+function riskColor(level){
+  if(level === 'High') return 'var(--danger)';
+  if(level === 'Medium') return 'var(--warn)';
+  return 'var(--safe)';
+}
+
+function renderGauge(prob, level, threshold, lang){
+  const pct = Math.round(prob*100);
+  const angle = -90 + (prob*180); // -90 (0%) to +90 (100%)
+  const color = riskColor(level);
+  const threshAngle = -90 + (threshold*180);
+  return `
+  <div class="gauge-wrap">
+    <svg viewBox="0 0 200 115" width="100%">
+      <path d="M 10 105 A 90 90 0 0 1 190 105" fill="none" stroke="var(--asphalt-700)" stroke-width="14" stroke-linecap="round"/>
+      <path d="M 10 105 A 90 90 0 0 1 190 105" fill="none" stroke="${color}" stroke-width="14" stroke-linecap="round"
+            stroke-dasharray="${Math.PI*90}" stroke-dashoffset="${Math.PI*90*(1-prob)}"/>
+      <line x1="100" y1="105"
+            x2="${100 + 78*Math.cos(threshAngle*Math.PI/180)}"
+            y2="${105 + 78*Math.sin(threshAngle*Math.PI/180)}"
+            stroke="var(--paper-dim)" stroke-width="2" stroke-dasharray="3,3"/>
+      <circle cx="100" cy="105" r="5" fill="var(--paper)"/>
+      <line x1="100" y1="105"
+            x2="${100 + 70*Math.cos(angle*Math.PI/180)}"
+            y2="${105 + 70*Math.sin(angle*Math.PI/180)}"
+            stroke="var(--paper)" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+    <div class="gauge-label">
+      <span class="pct" style="color:${color}">${pct}%</span>
+      <span class="risk">${TXT[lang].gaugeCaption}</span>
+    </div>
+  </div>`;
+}
+
+function renderResult(data, lang){
+  const cls = riskClass(data.risk_level);
+  const t = TXT[lang];
+  resultBody.innerHTML = `
+    ${renderGauge(data.probability, data.risk_level, data.threshold_used, lang)}
+    <div class="verdict ${cls}">
+      <b>${data.prediction === 1 ? t.verdictHigh : t.verdictLow}</b><br>
+      ${riskLabel(data.risk_level, lang)}
+    </div>
+    <div class="meta-row">
+      <span>probability</span><span>${data.probability}</span>
+    </div>
+    <div class="meta-row">
+      <span>threshold</span><span>${data.threshold_used}</span>
+    </div>
+  `;
+}
+
+form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const base = apiBaseInput.value.replace(/\/$/,'');
+  const fd = new FormData(form);
+  const payload = buildPayload(fd);
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = TXT[currentLang].predicting;
+
+  try{
+    const res = await fetch(base + '/predict', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+
+    if(!res.ok){
+      const errText = await res.text();
+      lastResult = null;
+      lastErrorText = `HTTP ${res.status}\n${errText}`;
+      resultBody.innerHTML = `<div class="err-box">${lastErrorText}</div>`;
+      return;
+    }
+
+    const data = await res.json();
+    lastResult = data;
+    lastErrorText = null;
+    renderResult(data, currentLang);
+  } catch(err){
+    lastResult = null;
+    lastErrorText = String(err);
+    resultBody.innerHTML = `<div class="err-box">${TXT[currentLang].fetchFail(lastErrorText)}</div>`;
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = TXT[currentLang].predict;
+  }
+});
+
+function applyLang(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.title = TXT[lang].title;
+
+  document.querySelectorAll('[data-ar]').forEach(el=>{
+    const val = lang === 'ar' ? el.getAttribute('data-ar') : el.getAttribute('data-en');
+    if(val !== null) el.textContent = val;
+  });
+
+  langToggle.textContent = TXT[lang].toggleLabel;
+  submitBtn.textContent = submitBtn.disabled ? TXT[lang].predicting : TXT[lang].predict;
+  updateStatusText();
+
+  if(lastResult){
+    renderResult(lastResult, lang);
+  } else if(lastErrorText){
+    resultBody.innerHTML = `<div class="err-box">${lastErrorText}</div>`;
+  } else {
+    resultBody.innerHTML = `<div class="empty-state">${TXT[lang].emptyState}</div>`;
+  }
+}
+
+langToggle.addEventListener('click', ()=>{
+  applyLang(currentLang === 'ar' ? 'en' : 'ar');
+});
+</script>
+
+</body>
+</html>
